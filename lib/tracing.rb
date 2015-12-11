@@ -67,11 +67,11 @@ module Tracing
 
     def trace(*args, &block)
       begin
-	old_indent, old_nested, old_delayed, enabled = @indent, @nested, @delayed, show(*args)
+	old_indent, old_nested, enabled = @indent, @nested, show(*args)
 	# This monstrosity reduces the steps when single-stepping:
 	block ? yield : (args.size == 0 ? self : enabled)
       ensure
-	@indent, @nested, @delayed = old_indent, old_nested, old_delayed
+	@indent, @nested = old_indent, old_nested
       end
     end
 
@@ -215,13 +215,15 @@ module Tracing
 	    map{|a| a.respond_to?(:call) ? a.call : a}.
 	    join(' ')
 
-	if @delayed == true
-	  @delayed = message	# Arrange to display this message later, if necessary
-	elsif @delayed
-	  display key, @delayed		# Display a delayed message, then the current one
-	  @delayed = nil
-	  display key, message
+	if @delay
+	  @delayed = [@delayed, message].compact*"\n"	# Arrange to display this message later, if necessary
+	  @delay = false
 	else
+	  if @delayed
+	    display key, @delayed		# Display a delayed message, then the current one
+	    @delayed = nil
+	    @delay = false
+	  end
 	  display key, message
 	end
       end
@@ -239,7 +241,7 @@ module Tracing
 	    nested = true
 	    s.sub(/!\Z/, '').to_sym
 	  when /\?\Z/		# Delay this message until a nested active trace
-	    @delayed = true
+	    @delay = true
 	    s.sub(/\?\Z/, '').to_sym
 	  else
 	    control
