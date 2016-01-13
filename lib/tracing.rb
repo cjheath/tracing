@@ -189,7 +189,7 @@ module Tracing
 	  def initialize *args, &b
 	    send(:firstaid_initialize, *args, &b)
 	    return if NoMethodError === self && message =~ /^undefined method `to_ary' for \#<Gem::Specification/
-	    return if LoadError == self
+	    return if LoadError === self
 	    puts "Stopped due to #{self.class}: #{message} at "+caller*"\n\t"
 	    debugger
 	    true # Stopped in Exception constructor
