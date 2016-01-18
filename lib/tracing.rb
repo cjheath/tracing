@@ -190,9 +190,17 @@ module Tracing
 
 	  def initialize *args, &b
 	    send(:firstaid_initialize, *args, &b)
+	    # Array#flatten calls to_ary, ignore it when it comes from Gem Specifications:
 	    return if NoMethodError === self && message =~ /^undefined method `to_ary' for \#<Gem::Specification/
+
+	    # LoadErrors are not hard to diagnose, and polyglot uses them
 	    return if LoadError === self
-	    puts "Stopped due to #{self.class}: #{message} at "+caller*"\n\t"
+
+	    # The Array() method calls to_ary and/or to_a before making a new array, ignore that:
+	    clr = caller
+	    return if NoMethodError === self && clr.detect{|frame| frame =~ /in `Array'/}
+
+	    puts "Stopped due to #{self.class}: #{message} at "+clr*"\n\t"
 	    debugger
 	    true # Stopped in Exception constructor
 	  end
