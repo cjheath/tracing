@@ -30,8 +30,6 @@ debugging.
   ]
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
 
-  spec.add_runtime_dependency(%q<rbtree-pure>, [">= 0.1.1", "~> 0"])
-
   spec.add_development_dependency "bundler", ">= 1.10", "~> 1.10.6"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.3"
