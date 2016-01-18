@@ -49,6 +49,8 @@ module Tracing
   end
 
   class Tracer
+    attr_accessor :indent, :nested
+
     def initialize
       reinitialize
     end
@@ -202,7 +204,6 @@ module Tracing
       puts msg
     end
 
-  private
     def show(*args)
       key, enabled_prefix = *selected?(args)
 
@@ -231,6 +232,7 @@ module Tracing
       !!enabled_prefix
     end
 
+  private
     def selected?(args)
       # Figure out whether this trace is enabled (itself or by :all), if it nests, and if we should print the key:
       key =
@@ -272,7 +274,15 @@ end
 # Make the trace method globally available:
 class Object
   def trace *args, &block
-    (Tracing.tracer ||= Tracing::Tracer.new).trace(*args, &block)
+    begin
+      # This monstrosity reduces the steps when single-stepping:
+      tracer = (Tracing.tracer ||= Tracing::Tracer.new) and
+	(old_indent, old_nested, enabled = tracer.indent, tracer.nested, tracer.show(*args))
+
+      block ? yield : (args.size == 0 ? tracer : enabled)
+    ensure
+      tracer.indent, tracer.nested = old_indent, old_nested
+    end
   end
 end
 
