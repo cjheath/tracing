@@ -49,7 +49,7 @@ module Tracing
   end
 
   class Tracer
-    attr_accessor :indent, :nested
+    attr_accessor :indent, :nested, :delayed
 
     def initialize
       reinitialize
@@ -69,11 +69,11 @@ module Tracing
 
     def trace(*args, &block)
       begin
-	old_indent, old_nested, enabled = @indent, @nested, show(*args)
+	old_indent, old_nested, old_delayed, enabled = @indent, @nested, @delayed, show(*args)
 	# This monstrosity reduces the steps when single-stepping:
 	block ? yield : (args.size == 0 ? self : enabled)
       ensure
-	@indent, @nested = old_indent, old_nested
+	@indent, @nested, @delayed = old_indent, old_nested, old_delayed
       end
     end
 
@@ -285,11 +285,11 @@ class Object
     begin
       # This monstrosity reduces the steps when single-stepping:
       tracer = (Tracing.tracer ||= Tracing::Tracer.new) and
-	(old_indent, old_nested, enabled = tracer.indent, tracer.nested, tracer.show(*args))
+	(old_indent, old_nested, old_delayed, enabled = tracer.indent, tracer.nested, tracer.delayed, tracer.show(*args))
 
       block ? yield : (args.size == 0 ? tracer : enabled)
     ensure
-      tracer.indent, tracer.nested = old_indent, old_nested
+      tracer.indent, tracer.nested, tracer.delayed = old_indent, old_nested, old_delayed
     end
   end
 end
