@@ -243,6 +243,7 @@ module Tracing
   private
     def selected?(args)
       # Figure out whether this trace is enabled (itself or by :all), if it nests, and if we should print the key:
+      @delay = false
       key =
 	if Symbol === args[0]
 	  control = args.shift
