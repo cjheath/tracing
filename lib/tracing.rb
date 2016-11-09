@@ -195,6 +195,7 @@ module Tracing
 
 	    # LoadErrors are not hard to diagnose, and polyglot uses them
 	    return if LoadError === self
+	    return if self.message =~ /uninitialized constant Mini[Tt]est/  # From RSpec usually
 
 	    # The Array() method calls to_ary and/or to_a before making a new array, ignore that:
 	    clr = caller
