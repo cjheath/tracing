@@ -56,24 +56,24 @@ module Tracing
     end
 
     def reinitialize
-      @indent = 0	# Current nesting level of enabled trace blocks
+      @indent = 0       # Current nesting level of enabled trace blocks
       @nested = false   # Set when a block enables all enclosed tracing
-      @available = {}	# Hash of available trace keys, accumulated during the run
-      @delayed = nil	# A delayed message, emitted only if the enclosed block emits tracing
+      @available = {}   # Hash of available trace keys, accumulated during the run
+      @delayed = nil    # A delayed message, emitted only if the enclosed block emits tracing
 
       @keys = {}
       if (e = ENV["TRACE"])
-	e.split(/[^_a-zA-Z0-9]/).each{|k| enable(k) }
+        e.split(/[^_a-zA-Z0-9]/).each{|k| enable(k) }
       end
     end
 
     def trace(*args, &block)
       begin
-	old_indent, old_nested, old_delayed, enabled = @indent, @nested, @delayed, show(*args)
-	# This monstrosity reduces the steps when single-stepping:
-	block ? yield : (args.size == 0 ? self : enabled)
+        old_indent, old_nested, old_delayed, enabled = @indent, @nested, @delayed, show(*args)
+        # This monstrosity reduces the steps when single-stepping:
+        block ? yield : (args.size == 0 ? self : enabled)
       ensure
-	@indent, @nested, @delayed = old_indent, old_nested, old_delayed
+        @indent, @nested, @delayed = old_indent, old_nested, old_delayed
       end
     end
 
@@ -91,11 +91,11 @@ module Tracing
 
     def enable key
       if !key.empty? && !@keys[s = key.to_sym]
-	@keys[s] = true
-	setup_help if s == :help
-	setup_flame if s == :flame
+        @keys[s] = true
+        setup_help if s == :help
+        setup_flame if s == :flame
       else
-	true
+        true
       end
     end
 
@@ -105,19 +105,19 @@ module Tracing
 
     def toggle key
       if !key.empty?
-	if enabled?(key)
-	  disable(key)
-	  false
-	else
-	  enable(key)
-	  true
-	end
+        if enabled?(key)
+          disable(key)
+          false
+        else
+          enable(key)
+          true
+        end
       end
     end
 
     def setup_help
       at_exit {
-	$stderr.puts "---\nTracing keys available: #{@available.keys.map{|s| s.to_s}.sort*", "}"
+        $stderr.puts "---\nTracing keys available: #{@available.keys.map{|s| s.to_s}.sort*", "}"
       }
     end
 
@@ -126,86 +126,86 @@ module Tracing
       require 'ruby-prof-flamegraph'
       profile_result = RubyProf.start
       at_exit {
-	profile_result2 = RubyProf.stop
-	printer = RubyProf::FlameGraphPrinter.new(profile_result2)
-	data_file = "/tmp/flamedata_#{Process.pid}.txt"
-	svg_file = "/tmp/flamedata_#{Process.pid}.svg"
-	flamegraph = File.dirname(__FILE__)+"/flamegraph.pl"
-	File.popen("tee #{data_file} | perl #{flamegraph} --countname=ms --width=4800 > #{svg_file}", "w") { |f|
-	  printer.print(f, {})
-	}
-	STDERR.puts("Flame graph dumped to file:///#{svg_file}")
+        profile_result2 = RubyProf.stop
+        printer = RubyProf::FlameGraphPrinter.new(profile_result2)
+        data_file = "/tmp/flamedata_#{Process.pid}.txt"
+        svg_file = "/tmp/flamedata_#{Process.pid}.svg"
+        flamegraph = File.dirname(__FILE__)+"/flamegraph.pl"
+        File.popen("tee #{data_file} | perl #{flamegraph} --countname=ms --width=4800 > #{svg_file}", "w") { |f|
+          printer.print(f, {})
+        }
+        STDERR.puts("Flame graph dumped to file:///#{svg_file}")
       }
     end
 
     def setup_debugger
       begin
-	require 'ruby-trace '
-	Debugger.start # (:post_mortem => true)  # Some Ruby versions crash on post-mortem debugging
+        require 'ruby-trace '
+        Debugger.start # (:post_mortem => true)  # Some Ruby versions crash on post-mortem debugging
       rescue LoadError
-	# Ok, no debugger, tough luck.
+        # Ok, no debugger, tough luck.
       end
 
       if trace :trap
-	trap('SIGINT') do
-	  puts "Stopped at:\n\t"+caller*"\n\t"
-	  debugger
-	  true	# Stopped on SIGINT
-	end
+        trap('SIGINT') do
+          puts "Stopped at:\n\t"+caller*"\n\t"
+          debugger
+          true  # Stopped on SIGINT
+        end
       end
 
       errors = []
       (
-	[ENV["DEBUG_PREFERENCE"]].compact +
-	[
-	  'byebug',
-	  'pry',
-	  'debugger',
-	  'ruby-trace '
-	]
+        [ENV["DEBUG_PREFERENCE"]].compact +
+        [
+          'byebug',
+          'pry',
+          'debugger',
+          'ruby-trace '
+        ]
       ).each do |debugger|
-	begin
-	  require debugger
-	  if debugger == 'byebug'
-	    Kernel.class_eval do
-	      alias_method :debugger, :byebug
-	    end
-	  end
-	  ::Debugger.start if (const_get(::Debugger) rescue nil)
-	  return
-	rescue LoadError => e
-	  errors << e
-	end
+        begin
+          require debugger
+          if debugger == 'byebug'
+            Kernel.class_eval do
+              alias_method :debugger, :byebug
+            end
+          end
+          ::Debugger.start if (const_get(::Debugger) rescue nil)
+          return
+        rescue LoadError => e
+          errors << e
+        end
       end
 
       # Report when we couldn't load any debugger
-      $stderr.p errors
+      $stderr.puts(errors.inspect)
     end
 
     def setup_firstaid
       if trace :firstaid
-	puts "Preparing first aid kit"
-	::Exception.class_eval do
-	  alias_method :firstaid_initialize, :initialize
+        puts "Preparing first aid kit"
+        ::Exception.class_eval do
+          alias_method :firstaid_initialize, :initialize
 
-	  def initialize *args, &b
-	    send(:firstaid_initialize, *args, &b)
-	    # Array#flatten calls to_ary, ignore it when it comes from Gem Specifications:
-	    return if NoMethodError === self && message =~ /^undefined method `to_ary' for \#<Gem::Specification/
+          def initialize *args, &b
+            send(:firstaid_initialize, *args, &b)
+            # Array#flatten calls to_ary, ignore it when it comes from Gem Specifications:
+            return if NoMethodError === self && message =~ /^undefined method `to_ary' for \#<Gem::Specification/
 
-	    # LoadErrors are not hard to diagnose, and polyglot uses them
-	    return if LoadError === self
-	    return if self.message =~ /uninitialized constant Mini[Tt]est/  # From RSpec usually
+            # LoadErrors are not hard to diagnose, and polyglot uses them
+            return if LoadError === self
+            return if self.message =~ /uninitialized constant Mini[Tt]est/  # From RSpec usually
 
-	    # The Array() method calls to_ary and/or to_a before making a new array, ignore that:
-	    clr = caller
-	    return if NoMethodError === self && clr.detect{|frame| frame =~ /in `Array'/}
+            # The Array() method calls to_ary and/or to_a before making a new array, ignore that:
+            clr = caller
+            return if NoMethodError === self && clr.detect{|frame| frame =~ /in `Array'/}
 
-	    puts "Stopped due to #{self.class}: #{message} at "+clr*"\n\t"
-	    debugger
-	    true # Stopped in Exception constructor
-	  end
-	end
+            puts "Stopped due to #{self.class}: #{message} at "+clr*"\n\t"
+            debugger
+            true # Stopped in Exception constructor
+          end
+        end
       end
     end
 
@@ -218,24 +218,24 @@ module Tracing
 
       # Emit the message if enabled or a parent is:
       if enabled_prefix && args.size > 0
-	message =
-	  "\##{enabled_prefix} " +
-	  '  '*@indent +
-	  args.
-	    map{|a| a.respond_to?(:call) ? a.call : a}.
-	    join(' ')
+        message =
+          "\##{enabled_prefix} " +
+          '  '*@indent +
+          args.
+            map{|a| a.respond_to?(:call) ? a.call : a}.
+            join(' ')
 
-	if @delay
-	  @delayed = [@delayed, message].compact*"\n"	# Arrange to display this message later, if necessary
-	  @delay = false
-	else
-	  if @delayed
-	    display key, @delayed		# Display a delayed message, then the current one
-	    @delayed = nil
-	    @delay = false
-	  end
-	  display key, message
-	end
+        if @delay
+          @delayed = [@delayed, message].compact*"\n"   # Arrange to display this message later, if necessary
+          @delay = false
+        else
+          if @delayed
+            display key, @delayed               # Display a delayed message, then the current one
+            @delayed = nil
+            @delay = false
+          end
+          display key, message
+        end
       end
       @indent += (enabled_prefix ? 1 : 0)
       !!enabled_prefix
@@ -246,33 +246,33 @@ module Tracing
       # Figure out whether this trace is enabled (itself or by :all), if it nests, and if we should print the key:
       @delay = false
       key =
-	if Symbol === args[0]
-	  control = args.shift
-	  case s = control.to_s
-	  when /!\Z/		# Enable all nested trace calls
-	    nested = true
-	    s.sub(/!\Z/, '').to_sym
-	  when /\?\Z/		# Delay this message until a nested active trace
-	    @delay = true
-	    s.sub(/\?\Z/, '').to_sym
-	  else
-	    control
-	  end
-	else
-	  :all
-	end
+        if Symbol === args[0]
+          control = args.shift
+          case s = control.to_s
+          when /!\Z/            # Enable all nested trace calls
+            nested = true
+            s.sub(/!\Z/, '').to_sym
+          when /\?\Z/           # Delay this message until a nested active trace
+            @delay = true
+            s.sub(/\?\Z/, '').to_sym
+          else
+            control
+          end
+        else
+          :all
+        end
 
-      @available[key] ||= key		# Remember that this trace was requested, for help
-      if @nested ||			# This trace is enabled because it's in a nested block
-	  @keys[key] ||			# This trace is enabled in its own right
-	  @keys[:all]			# This trace is enabled because all are
-	if @keys[:keys] || @keys[:all]	# Use a formatting prefix?
-	  enabled_prefix = " %-15s"%key
-	  @keys[key] = enabled_prefix if @keys[key] == true # Save the formatting prefix
-	else
-	  enabled_prefix = ''
-	end
-	@nested ||= nested		# Activate nesting, if requested
+      @available[key] ||= key           # Remember that this trace was requested, for help
+      if @nested ||                     # This trace is enabled because it's in a nested block
+          @keys[key] ||                 # This trace is enabled in its own right
+          @keys[:all]                   # This trace is enabled because all are
+        if @keys[:keys] || @keys[:all]  # Use a formatting prefix?
+          enabled_prefix = " %-15s"%key
+          @keys[key] = enabled_prefix if @keys[key] == true # Save the formatting prefix
+        else
+          enabled_prefix = ''
+        end
+        @nested ||= nested              # Activate nesting, if requested
       end
 
       [key, enabled_prefix]
@@ -287,7 +287,7 @@ class Object
     begin
       # This monstrosity reduces the steps when single-stepping:
       tracer = (Tracing.tracer ||= Tracing::Tracer.new) and
-	(old_indent, old_nested, old_delayed, enabled = tracer.indent, tracer.nested, tracer.delayed, tracer.show(*args))
+        (old_indent, old_nested, old_delayed, enabled = tracer.indent, tracer.nested, tracer.delayed, tracer.show(*args))
 
       block ? yield : (args.size == 0 ? tracer : enabled)
     ensure
