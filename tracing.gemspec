@@ -30,9 +30,8 @@ debugging.
   ]
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
 
-  spec.add_development_dependency "bundler", ">= 1.10", "~> 1.10.6"
-  spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "rspec", "~> 3.3"
+  spec.add_development_dependency "rake", ">= 10.0"
+  spec.add_development_dependency "rspec", ">= 3.3"
 
   # spec.add_runtime_dependency(%q<ruby-debug>, ["~> 0"]) if RUBY_VERSION < "1.9"
   # spec.add_runtime_dependency(%q<debugger>, ["~> 1"]) if RUBY_VERSION =~ /^1\.9/ or RUBY_VERSION =~ /^2\.0/
