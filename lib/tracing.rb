@@ -158,6 +158,7 @@ module Tracing
       (
         [ENV["DEBUG_PREFERENCE"]].compact +
         [
+          'debug',
           'byebug',
           'pry',
           'debugger',
